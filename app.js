@@ -11,10 +11,6 @@ const PORT = 8880;
 const DATA_FOLDER = path.join(__dirname, 'data/forensic_files');
 
 const server = http.createServer((req, res) => {
-
-    // -----------------------
-    // CORS (IMPORTANT FOR FRONTEND TESTS)
-    // -----------------------
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -27,10 +23,11 @@ const server = http.createServer((req, res) => {
     console.log(`[REQUEST] ${req.method} ${req.url}`);
 
     // -----------------------
-    // BACKEND TEST ROUTE (/ping)
+    // BACKEND TEST ROUTE (PING)
     // -----------------------
     if (req.url === '/ping') {
 
+        // GET test
         if (req.method === 'GET') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({
@@ -40,14 +37,17 @@ const server = http.createServer((req, res) => {
             }));
         }
 
+        // POST pipeline updates
         if (req.method === 'POST') {
             let body = '';
 
-            req.on('data', chunk => body += chunk);
+            req.on('data', chunk => {
+                body += chunk.toString();
+            });
 
             req.on('end', () => {
                 try {
-                    const data = JSON.parse(body || '{}');
+                    const data = JSON.parse(body || "{}");
 
                     const sessionId =
                         data.deviceId ||
@@ -58,23 +58,20 @@ const server = http.createServer((req, res) => {
                     pipelineStore.updateSession(sessionId, {
                         stage: data.stage || 'unknown',
                         userAgent: data.userAgent || '',
-                        raw: data,
-                        time: Date.now()
+                        raw: data
                     });
 
-                    console.log('📩 PING POST RECEIVED:', data);
+                    console.log("📩 PIPELINE UPDATE:", data);
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         ok: true,
-                        received: true,
-                        stage: data.stage || "unknown",
-                        time: Date.now()
+                        received: true
                     }));
 
                 } catch (e) {
                     res.writeHead(400);
-                    res.end(JSON.stringify({ error: 'invalid json' }));
+                    res.end(JSON.stringify({ error: 'Invalid JSON' }));
                 }
             });
 
@@ -111,7 +108,7 @@ const server = http.createServer((req, res) => {
     }
 
     // -----------------------
-    // STATS (UPLOAD SYSTEM)
+    // STATS ROUTE
     // -----------------------
     if (req.url.startsWith('/stats')) {
         if (!authController.isAuthenticated(req)) {
@@ -141,7 +138,7 @@ const server = http.createServer((req, res) => {
     }
 
     // -----------------------
-    // FILE DOWNLOADS
+    // FILES DOWNLOAD
     // -----------------------
     if (req.url.startsWith('/files/')) {
         if (!authController.isAuthenticated(req)) {
@@ -159,14 +156,11 @@ const server = http.createServer((req, res) => {
 
         try {
             const file = fs.readFileSync(filePath);
-
             res.writeHead(200, {
                 'Content-Type': 'application/octet-stream',
                 'Content-Disposition': `attachment; filename="${path.basename(filePath)}"`
             });
-
             return res.end(file);
-
         } catch {
             res.writeHead(404);
             return res.end('File not found');
@@ -174,7 +168,7 @@ const server = http.createServer((req, res) => {
     }
 
     // -----------------------
-    // PIPELINE VIEW (YOUR BACKEND PANEL DATA)
+    // PIPELINE VIEW (UI)
     // -----------------------
     if (req.url === '/pipeline') {
         if (!authController.isAuthenticated(req)) {
@@ -188,20 +182,16 @@ const server = http.createServer((req, res) => {
         return res.end(JSON.stringify(data, null, 2));
     }
 
-    // -----------------------
-    // 404
-    // -----------------------
     res.writeHead(404);
     res.end('Not Found');
 });
 
-// -----------------------
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
 // -----------------------
-// DEVICE SCAN
+// DEVICE GENERATOR
 // -----------------------
 function generateDevicesJSON() {
     if (!fs.existsSync(DATA_FOLDER)) return [];
@@ -209,13 +199,11 @@ function generateDevicesJSON() {
     return fs.readdirSync(DATA_FOLDER, { withFileTypes: true })
         .filter(d => d.isDirectory())
         .map(deviceDir => {
-
             const devicePath = path.join(DATA_FOLDER, deviceDir.name);
 
             const categories = fs.readdirSync(devicePath, { withFileTypes: true })
                 .filter(c => c.isDirectory())
                 .reduce((acc, catDir) => {
-
                     const catPath = path.join(devicePath, catDir.name);
 
                     const files = fs.readdirSync(catPath).map(fName => ({
@@ -225,12 +213,8 @@ function generateDevicesJSON() {
 
                     acc[catDir.name] = files;
                     return acc;
-
                 }, {});
 
-            return {
-                deviceUUID: deviceDir.name,
-                categories
-            };
+            return { deviceUUID: deviceDir.name, categories };
         });
 }
