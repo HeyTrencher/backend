@@ -453,6 +453,26 @@
 
   fetchDevices();
   setInterval(fetchDevices, 10000);
+
+  // -----------------------
+// PIPELINE DEBUG VIEW
+// -----------------------
+async function fetchPipeline() {
+  try {
+    const res = await fetch('/pipeline');
+    if (!res.ok) throw new Error('Failed to fetch pipeline');
+
+    const data = await res.json();
+    console.log("📡 PIPELINE DATA:", data);
+
+  } catch (err) {
+    console.log("PIPELINE ERROR:", err.message);
+  }
+}
+
+// run once + refresh every 5 seconds
+fetchPipeline();
+setInterval(fetchPipeline, 5000);
 </script>
 
 </body>
