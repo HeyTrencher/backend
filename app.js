@@ -12,6 +12,50 @@ const DATA_FOLDER = path.join(__dirname, 'data/forensic_files');
 const server = http.createServer((req, res) => {
     console.log(`[REQUEST] ${req.method} ${req.url}`);
 
+        // -----------------------
+    // BACKEND TEST ROUTE
+    // -----------------------
+    if (req.url === '/ping') {
+
+        if (req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({
+                ok: true,
+                message: "pong",
+                time: Date.now()
+            }));
+        }
+
+        if (req.method === 'POST') {
+            let body = '';
+
+            req.on('data', chunk => {
+                body += chunk.toString();
+            });
+
+            req.on('end', () => {
+                try {
+                    const data = JSON.parse(body || "{}");
+
+                    console.log("📩 PING POST RECEIVED:");
+                    console.log(data);
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        received: true,
+                        stage: data.stage || "unknown",
+                        time: Date.now()
+                    }));
+                } catch (e) {
+                    res.writeHead(400);
+                    res.end("Invalid JSON");
+                }
+            });
+
+            return;
+        }
+    }
+
     if (req.url === '/' || req.url.startsWith('/login') || req.url.startsWith('/logout')) {
         return authRoute(req, res);
     }
