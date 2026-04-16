@@ -172,6 +172,18 @@ if (req.method === "OPTIONS") {
     return;
 }
 
+    if (req.url === '/pipeline') {
+    if (!authController.isAuthenticated(req)) {
+        res.writeHead(401);
+        return res.end('Unauthorized');
+    }
+
+    const data = pipelineStore.getAll();
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(data, null, 2));
+}
+
     res.writeHead(404);
     res.end('Not Found');
 });
