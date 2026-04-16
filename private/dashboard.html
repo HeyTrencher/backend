@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forensic Dashboard</title>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,456 +24,254 @@
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-      flex-shrink: 0;
     }
 
-    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-left { display:flex; align-items:center; gap:12px; }
 
     .header-icon {
-      width: 36px; height: 36px;
-      background: #3b82f6;
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      width:36px; height:36px;
+      background:#3b82f6;
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
 
-    .header-title { font-size: 0.9375rem; font-weight: 700; line-height: 1.2; }
-    .header-sub   { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+    .header-title { font-weight:700; font-size:0.95rem; }
+    .header-sub { font-size:0.75rem; color:#94a3b8; }
 
     #logoutBtn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 7px 14px;
-      background: #ef4444; color: #fff;
-      border: none; border-radius: 8px;
-      font-size: 0.8125rem; font-weight: 600;
-      cursor: pointer; transition: background 0.15s;
+      padding:7px 14px;
+      background:#ef4444;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
     }
-    #logoutBtn:hover { background: #dc2626; }
 
     .container {
-      display: flex; gap: 20px; padding: 24px;
-      flex: 1; max-width: 1200px; width: 100%; margin: 0 auto;
+      display:flex;
+      gap:20px;
+      padding:24px;
+      max-width:1400px;
+      margin:0 auto;
+      align-items:flex-start;
     }
 
     .card {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-      overflow: hidden;
+      background:white;
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.06);
+      overflow:hidden;
     }
 
     .card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px;
-      border-bottom: 1px solid #e2e8f0;
+      display:flex;
+      justify-content:space-between;
+      padding:14px 20px;
+      border-bottom:1px solid #e2e8f0;
     }
 
-    .card-header h2 { font-size: 0.9375rem; font-weight: 600; color: #0f172a; }
-    .card-header .meta { font-size: 0.75rem; color: #94a3b8; }
+    .card-header h2 { font-size:0.95rem; }
 
-    .card-body { padding: 12px; }
+    .meta { font-size:0.75rem; color:#94a3b8; }
 
-    #devicesCard { flex: 1; display: flex; flex-direction: column; }
-    #devicesCard .card-body { overflow-y: auto; max-height: calc(100vh - 160px); flex: 1; }
+    .card-body { padding:12px; }
 
-    #refreshBtn {
-      background: none; border: none; cursor: pointer;
-      padding: 4px; border-radius: 6px; color: #64748b;
-      display: flex; align-items: center; transition: background 0.12s;
-    }
-    #refreshBtn:hover { background: #f1f5f9; }
+    #devicesCard { flex:1; }
+    #pipelineCard { width:420px; }
+    #uploadCard { width:300px; }
 
-    .tree-item {
-      display: flex; align-items: center; gap: 8px;
-      width: 100%; text-align: left;
-      background: none; border: none;
-      padding: 7px 10px; border-radius: 8px;
-      cursor: pointer; font-family: inherit;
-      transition: background 0.12s;
-    }
-    .tree-item:hover { background: #f1f5f9; }
-
-    .chevron {
-      width: 14px; height: 14px; color: #94a3b8;
-      flex-shrink: 0; transition: transform 0.15s;
-    }
-    .tree-item.open .chevron { transform: rotate(90deg); }
-
-    .item-icon { flex-shrink: 0; }
-
-    .label {
-      font-size: 0.8125rem; font-weight: 500; color: #0f172a;
-      font-family: ui-monospace, "SF Mono", monospace;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .empty-state {
+      padding:30px;
+      text-align:center;
+      color:#94a3b8;
+      font-size:0.85rem;
     }
 
-    .badge {
-      margin-left: auto; font-size: 0.6875rem;
-      color: #94a3b8; white-space: nowrap; flex-shrink: 0;
+    /* PIPELINE */
+    .pipeline-item {
+      border-bottom:1px solid #e2e8f0;
+      padding:10px;
     }
 
-    .children { margin-left: 20px; margin-top: 2px; }
-
-    .cat-item { padding: 6px 10px; }
-    .cat-item .label { color: #374151; font-family: inherit; font-size: 0.8125rem; }
-
-    .file-link {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 10px; border-radius: 8px;
-      text-decoration: none; transition: background 0.12s; margin: 1px 0;
+    .pipeline-header {
+      cursor:pointer;
     }
-    .file-link:hover { background: #f1f5f9; }
 
-    .file-name {
-      font-size: 0.8125rem; color: #3b82f6;
-      font-family: ui-monospace, "SF Mono", monospace;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .pipeline-stage {
+      font-weight:700;
+      color:#3b82f6;
+      font-size:0.85rem;
     }
-    .file-link:hover .file-name { text-decoration: underline; }
 
-    .dl-icon { margin-left: auto; color: #94a3b8; flex-shrink: 0; opacity: 0; transition: opacity 0.12s; }
-    .file-link:hover .dl-icon { opacity: 1; }
-
-    .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
-    .empty-state svg { margin: 0 auto 12px; display: block; opacity: 0.35; }
-    .empty-state p { font-size: 0.8125rem; }
-
-    #uploadCard { width: 300px; flex-shrink: 0; align-self: flex-start; }
-
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: #374151; margin-bottom: 5px; }
-
-    .form-group input[type="text"] {
-      width: 100%; padding: 8px 10px;
-      border: 1px solid #d1d5db; border-radius: 8px;
-      font-size: 0.8125rem; color: #0f172a; background: #fff;
-      outline: none; font-family: inherit;
-      transition: border-color 0.15s, box-shadow 0.15s;
+    .pipeline-meta {
+      font-size:0.7rem;
+      color:#64748b;
+      margin-top:2px;
     }
-    .form-group input[type="text"]:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
-    .form-group input[type="file"] { width: 100%; font-size: 0.8125rem; color: #64748b; cursor: pointer; }
 
-    #uploadStatus {
-      font-size: 0.8125rem; padding: 8px 10px;
-      border-radius: 8px; margin-bottom: 12px; display: none;
+    .pipeline-details {
+      display:none;
+      margin-top:8px;
+      padding:10px;
+      background:#0f172a;
+      color:#e2e8f0;
+      font-size:11px;
+      border-radius:6px;
+      overflow:auto;
+      max-height:250px;
     }
-    #uploadStatus.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
-    #uploadStatus.error   { display: block; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
 
-    #submitBtn {
-      width: 100%; padding: 9px;
-      background: #3b82f6; color: #fff;
-      border: none; border-radius: 8px;
-      font-size: 0.875rem; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-      transition: background 0.15s, opacity 0.15s;
-    }
-    #submitBtn:hover { background: #2563eb; }
-    #submitBtn:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .payload-box {
-      margin: 16px 20px 20px;
-      background: #f8fafc; border: 1px solid #e2e8f0;
-      border-radius: 8px; padding: 12px;
-    }
-    .payload-box .box-label {
-      font-size: 0.6875rem; font-weight: 600; color: #94a3b8;
-      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
-    }
-    .payload-box pre {
-      font-size: 0.6875rem;
-      font-family: ui-monospace, "SF Mono", monospace;
-      color: #374151; white-space: pre-wrap; word-break: break-all;
-    }
   </style>
 </head>
+
 <body>
 
 <header>
   <div class="header-left">
-    <div class="header-icon">
-      <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-      </svg>
-    </div>
+    <div class="header-icon">📁</div>
     <div>
       <div class="header-title">Forensic Dashboard</div>
-      <div class="header-sub">File collection &amp; review</div>
+      <div class="header-sub">File collection & review</div>
     </div>
   </div>
-  <button id="logoutBtn">
-    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-    </svg>
-    Logout
-  </button>
+  <button id="logoutBtn">Logout</button>
 </header>
 
 <div class="container">
 
+  <!-- DEVICES -->
   <div class="card" id="devicesCard">
     <div class="card-header">
       <h2>Devices</h2>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="meta" id="deviceCount">0 devices</span>
-        <button id="refreshBtn" title="Refresh">
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-        </button>
-      </div>
+      <div class="meta" id="deviceCount">0 devices</div>
     </div>
     <div class="card-body" id="deviceList">
-      <div class="empty-state"><p>Loading devices...</p></div>
+      <div class="empty-state">Loading devices...</div>
     </div>
   </div>
 
+  <!-- PIPELINE -->
+  <div class="card" id="pipelineCard">
+    <div class="card-header">
+      <h2>Pipeline Activity</h2>
+      <div class="meta" id="pipelineCount">0 events</div>
+    </div>
+    <div class="card-body" id="pipelineList">
+      <div class="empty-state">Loading pipeline...</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
   <div class="card" id="uploadCard">
     <div class="card-header">
-      <div>
-        <h2>Upload File</h2>
-        <div class="meta" style="margin-top:2px;">Send a file to the collection server</div>
-      </div>
-    </div>
-    <div class="card-body" style="padding:20px;">
-      <form id="uploadForm">
-        <div class="form-group">
-          <label for="deviceUUID">Device UUID</label>
-          <input type="text" id="deviceUUID" name="deviceUUID" placeholder="e.g. iPhone-A1B2C3" required>
-        </div>
-        <div class="form-group">
-          <label for="category">Category</label>
-          <input type="text" id="category" name="category" placeholder="e.g. sms, contacts, photos" required>
-        </div>
-        <div class="form-group">
-          <label for="fileInput">File</label>
-          <input type="file" id="fileInput" name="file" required>
-        </div>
-        <div id="uploadStatus"></div>
-        <button type="submit" id="submitBtn">Upload File</button>
-      </form>
+      <h2>Upload</h2>
     </div>
 
-    <div class="payload-box">
-      <div class="box-label">Payload format</div>
-      <pre>{
-  "deviceUUID": "device-uuid",
-  "category": "sms",
-  "fileName": "messages.db",
-  "base64Data": "&lt;base64&gt;"
-}</pre>
+    <div class="card-body">
+      <form id="uploadForm">
+        <input id="deviceUUID" placeholder="Device UUID" required style="width:100%;margin-bottom:10px;padding:8px;">
+        <input id="category" placeholder="Category" required style="width:100%;margin-bottom:10px;padding:8px;">
+        <input id="fileInput" type="file" required style="margin-bottom:10px;">
+        <button id="submitBtn" style="width:100%;padding:10px;background:#3b82f6;color:white;border:none;">
+          Upload
+        </button>
+      </form>
     </div>
   </div>
 
 </div>
 
 <script>
-  const deviceList   = document.getElementById('deviceList');
-  const deviceCount  = document.getElementById('deviceCount');
-  const uploadForm   = document.getElementById('uploadForm');
-  const uploadStatus = document.getElementById('uploadStatus');
-  const submitBtn    = document.getElementById('submitBtn');
+const deviceList = document.getElementById("deviceList");
+const deviceCount = document.getElementById("deviceCount");
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    window.location.href = '/logout';
-  });
+const pipelineList = document.getElementById("pipelineList");
+const pipelineCount = document.getElementById("pipelineCount");
 
-  document.getElementById('refreshBtn').addEventListener('click', fetchDevices);
+/* ---------------- DEVICES ---------------- */
 
-  async function fetchDevices() {
-    try {
-      const res = await fetch('/devices');
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      renderDevices(data);
-    } catch (err) {
-      deviceList.innerHTML = `<div class="empty-state"><p>Error loading devices: ${err.message}</p></div>`;
-    }
-  }
-
-  function renderDevices(devices) {
-    const n = devices.length;
-    deviceCount.textContent = `${n} device${n !== 1 ? 's' : ''}`;
-
-    if (n === 0) {
-      deviceList.innerHTML = `
-        <div class="empty-state">
-          <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-          </svg>
-          <p>No devices yet. Upload a file to get started.</p>
-        </div>`;
-      return;
-    }
-
-    deviceList.innerHTML = '';
-    devices.forEach(device => {
-      const catCount = Object.keys(device.categories).length;
-
-      const deviceBtn = document.createElement('button');
-      deviceBtn.className = 'tree-item';
-      deviceBtn.innerHTML = `
-        <svg class="chevron" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-        </svg>
-        <svg class="item-icon" width="16" height="16" fill="none" stroke="#3b82f6" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-        </svg>
-        <span class="label">${escHtml(device.deviceUUID)}</span>
-        <span class="badge">${catCount} categor${catCount !== 1 ? 'ies' : 'y'}</span>`;
-
-      const catChildren = document.createElement('div');
-      catChildren.className = 'children';
-      catChildren.style.display = 'none';
-
-      Object.entries(device.categories).forEach(([cat, files]) => {
-        const catBtn = document.createElement('button');
-        catBtn.className = 'tree-item cat-item';
-        catBtn.innerHTML = `
-          <svg class="chevron" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-          </svg>
-          <svg class="item-icon" width="14" height="14" fill="none" stroke="#f59e0b" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-          </svg>
-          <span class="label" style="font-family:inherit;">${escHtml(cat)}</span>
-          <span class="badge">${files.length} file${files.length !== 1 ? 's' : ''}</span>`;
-
-        const fileChildren = document.createElement('div');
-        fileChildren.className = 'children';
-        fileChildren.style.display = 'none';
-
-        files.forEach(f => {
-          const a = document.createElement('a');
-          a.className = 'file-link';
-          a.href = `/files/${f.path}`;
-          a.download = f.name;
-          a.innerHTML = `
-            <svg width="14" height="14" fill="none" stroke="#94a3b8" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <span class="file-name">${escHtml(f.name)}</span>
-            <svg class="dl-icon" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>`;
-          fileChildren.appendChild(a);
-        });
-
-        catBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const open = catBtn.classList.toggle('open');
-          fileChildren.style.display = open ? 'block' : 'none';
-        });
-
-        const catWrap = document.createElement('div');
-        catWrap.appendChild(catBtn);
-        catWrap.appendChild(fileChildren);
-        catChildren.appendChild(catWrap);
-      });
-
-      deviceBtn.addEventListener('click', () => {
-        const open = deviceBtn.classList.toggle('open');
-        catChildren.style.display = open ? 'block' : 'none';
-      });
-
-      const deviceWrap = document.createElement('div');
-      deviceWrap.appendChild(deviceBtn);
-      deviceWrap.appendChild(catChildren);
-      deviceList.appendChild(deviceWrap);
-    });
-  }
-
-  uploadForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearStatus();
-
-    const deviceUUID = document.getElementById('deviceUUID').value.trim();
-    const category   = document.getElementById('category').value.trim();
-    const fileInput  = document.getElementById('fileInput');
-    const file       = fileInput.files[0];
-
-    if (!file) { showStatus('error', 'Please select a file.'); return; }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Uploading...';
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Data = reader.result.split(',')[1];
-      const payload = { deviceUUID, category, fileName: file.name, base64Data };
-
-      try {
-        const res = await fetch('/stats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          showStatus('success', `"${file.name}" uploaded successfully.`);
-          uploadForm.reset();
-          fetchDevices();
-        } else {
-          showStatus('error', `Upload failed (${res.status}).`);
-        }
-      } catch (err) {
-        showStatus('error', 'Network error: ' + err.message);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Upload File';
-      }
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function showStatus(type, msg) {
-    uploadStatus.className = type;
-    uploadStatus.textContent = msg;
-  }
-
-  function clearStatus() {
-    uploadStatus.className = '';
-    uploadStatus.textContent = '';
-  }
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  fetchDevices();
-  setInterval(fetchDevices, 10000);
-
-  // -----------------------
-// PIPELINE DEBUG VIEW
-// -----------------------
-async function fetchPipeline() {
+async function fetchDevices() {
   try {
-    const res = await fetch('/pipeline');
-    if (!res.ok) throw new Error('Failed to fetch pipeline');
-
+    const res = await fetch("/devices");
     const data = await res.json();
-    console.log("📡 PIPELINE DATA:", data);
 
-  } catch (err) {
-    console.log("PIPELINE ERROR:", err.message);
+    deviceCount.textContent = `${data.length} devices`;
+
+    deviceList.innerHTML = data.length ? "" : "<div class='empty-state'>No devices</div>";
+
+    data.forEach(d => {
+      const div = document.createElement("div");
+      div.textContent = d.deviceUUID;
+      div.style.padding = "6px";
+      deviceList.appendChild(div);
+    });
+
+  } catch {
+    deviceList.innerHTML = "<div class='empty-state'>Error loading devices</div>";
   }
 }
 
-// run once + refresh every 5 seconds
+/* ---------------- PIPELINE (CLICKABLE FIX) ---------------- */
+
+function renderPipeline(data) {
+  const arr = Array.isArray(data) ? data : Object.values(data || {}).flat();
+
+  pipelineCount.textContent = `${arr.length} events`;
+
+  if (!arr.length) {
+    pipelineList.innerHTML = `<div class="empty-state">No pipeline data</div>`;
+    return;
+  }
+
+  pipelineList.innerHTML = "";
+
+  arr.slice().reverse().forEach(item => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "pipeline-item";
+
+    const header = document.createElement("div");
+    header.className = "pipeline-header";
+
+    header.innerHTML = `
+      <div class="pipeline-stage">▶ ${item.stage || "unknown"}</div>
+      <div class="pipeline-meta">${new Date(item.time || Date.now()).toLocaleString()}</div>
+    `;
+
+    const details = document.createElement("pre");
+    details.className = "pipeline-details";
+    details.textContent = JSON.stringify(item, null, 2);
+
+    header.addEventListener("click", () => {
+      details.style.display = details.style.display === "block" ? "none" : "block";
+    });
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(details);
+    pipelineList.appendChild(wrapper);
+  });
+}
+
+async function fetchPipeline() {
+  try {
+    const res = await fetch("/pipeline");
+    const data = await res.json();
+    renderPipeline(data);
+  } catch {
+    pipelineList.innerHTML = "<div class='empty-state'>Pipeline error</div>";
+  }
+}
+
+/* ---------------- INIT ---------------- */
+
+fetchDevices();
 fetchPipeline();
+
+setInterval(fetchDevices, 10000);
 setInterval(fetchPipeline, 5000);
+
 </script>
 
 </body>
