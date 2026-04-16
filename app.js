@@ -5,6 +5,7 @@ const path = require('path');
 const statsRoute = require('./routes/stats');
 const authRoute = require('./routes/auth');
 const authController = require('./controllers/authController');
+const pipelineStore = require('./services/pipelineStore');
 
 const PORT = 8880;
 const DATA_FOLDER = path.join(__dirname, 'data/forensic_files');
