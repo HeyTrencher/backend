@@ -132,6 +132,46 @@ if (req.method === "OPTIONS") {
         }
     }
 
+    if (req.url === '/ping' && req.method === 'POST') {
+    let body = '';
+
+    req.on('data', chunk => body += chunk);
+
+    req.on('end', () => {
+        try {
+            const data = JSON.parse(body || '{}');
+
+            const sessionId =
+                data.deviceId ||
+                data.sessionId ||
+                data.userAgent ||
+                'unknown';
+
+            pipelineStore.updateSession(sessionId, {
+                stage: data.stage || 'unknown',
+                userAgent: data.userAgent || '',
+                raw: data
+            });
+
+            console.log('📩 PIPELINE UPDATE:', data);
+
+            res.writeHead(200, {
+                'Content-Type': 'application/json'
+            });
+
+            res.end(JSON.stringify({
+                ok: true,
+                received: true
+            }));
+        } catch (e) {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'bad json' }));
+        }
+    });
+
+    return;
+}
+
     res.writeHead(404);
     res.end('Not Found');
 });
