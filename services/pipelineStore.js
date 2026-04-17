@@ -1,40 +1,111 @@
+// services/pipelineStore.js
+// PERMANENT JSON LOGGING VERSION
+
 const fs = require('fs');
 const path = require('path');
 
-const STORE_PATH = path.join(__dirname, '../data/pipeline.json');
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const LOG_FILE = path.join(DATA_DIR, 'pipeline_logs.json');
 
-function load() {
-    if (!fs.existsSync(STORE_PATH)) return {};
-    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function save(data) {
-    fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2));
+let sessions = loadLogs();
+
+/*
+sessions structure:
+
+{
+  sessionId123: {
+    sessionId,
+    firstSeen,
+    lastSeen,
+    currentStage,
+    userAgent,
+    events: [...]
+  }
+}
+*/
+
+function loadLogs() {
+  try {
+    if (!fs.existsSync(LOG_FILE)) return {};
+
+    const raw = fs.readFileSync(LOG_FILE, 'utf8');
+    return JSON.parse(raw || '{}');
+  } catch (err) {
+    console.log('Failed loading logs:', err.message);
+    return {};
+  }
 }
 
-function updateSession(id, update) {
-    const data = load();
+function saveLogs() {
+  try {
+    fs.writeFileSync(
+      LOG_FILE,
+      JSON.stringify(sessions, null, 2),
+      'utf8'
+    );
+  } catch (err) {
+    console.log('Failed saving logs:', err.message);
+  }
+}
 
-    if (!data[id]) {
-        data[id] = {
-            created: Date.now(),
-            stages: []
-        };
-    }
+function updateSession(sessionId, payload = {}) {
+  if (!sessionId) sessionId = 'unknown';
 
-    data[id].stages.push({
-        time: Date.now(),
-        ...update
-    });
+  const now = Date.now();
 
-    save(data);
+  if (!sessions[sessionId]) {
+    sessions[sessionId] = {
+      sessionId,
+      firstSeen: now,
+      lastSeen: now,
+      currentStage: payload.stage || 'unknown',
+      userAgent: payload.userAgent || '',
+      events: []
+    };
+  }
+
+  const session = sessions[sessionId];
+
+  session.lastSeen = now;
+  session.currentStage = payload.stage || session.currentStage;
+  session.userAgent = payload.userAgent || session.userAgent;
+
+  session.events.push({
+    time: now,
+    stage: payload.stage || 'unknown',
+    userAgent: payload.userAgent || '',
+    raw: payload.raw || {}
+  });
+
+  // keep newest 500 events
+  if (session.events.length > 500) {
+    session.events = session.events.slice(-500);
+  }
+
+  saveLogs();
 }
 
 function getAll() {
-    return load();
+  return Object.values(sessions)
+    .sort((a, b) => b.lastSeen - a.lastSeen);
+}
+
+function getSession(sessionId) {
+  return sessions[sessionId] || null;
+}
+
+function clearAll() {
+  sessions = {};
+  saveLogs();
 }
 
 module.exports = {
-    updateSession,
-    getAll
+  updateSession,
+  getAll,
+  getSession,
+  clearAll
 };
